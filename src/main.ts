@@ -5,7 +5,7 @@ import { Extractor } from 'extract';
 import { MarkdownFileChooserModal } from 'modals';
 import { BetterNoteComposerEditorCommand } from 'commands';
 import { BetterNoteComposerSettings, DEFAULT_SETTINGS, BetterNoteComposerSettingTab } from 'settings';
-
+import { isHeading } from 'utils';
 
 export default class BetterNoteComposerPlugin extends Plugin {
 	settings: BetterNoteComposerSettings;
@@ -60,6 +60,25 @@ export default class BetterNoteComposerPlugin extends Plugin {
 					const srcFile = info.file!;
 					showModalAndRun(srcFile, (dstFile, evt) => {
 						this.extractor.extractHeading(srcFile, editor, dstFile, Keymap.isModEvent(evt))
+					});
+				}
+			}),
+			new BetterNoteComposerEditorCommand({
+				id: 'extract-heading-recursive',
+				name: 'Extract this heading recursively...',
+				checker: (editor, info) => {
+					// @ts-ignore
+					const cm: EditorView = editor.cm;
+			        const currentLine = cm.state.doc.lineAt(cm.state.selection.main.anchor);
+					let currentHeadingLine = cm.state.doc.line(currentLine.number);
+
+					// Must click on the heading line to avoid matching with comments in a code block
+					return !!info.file && isHeading(currentHeadingLine.text);
+				},
+				executor: (editor, info) => {
+					const srcFile = info.file!;
+					showModalAndRun(srcFile, (dstFile, evt) => {
+						this.extractor.extractHeadingRecursive(srcFile, editor, dstFile, Keymap.isModEvent(evt))
 					});
 				}
 			}),

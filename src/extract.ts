@@ -3,7 +3,8 @@ import { TransactionSpec, Line } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import BetterNoteComposerPlugin from 'main';
-import { BetterNoteComposerComponent, contains, getDisplayText, isEmbed, isFrontmatterLinkCache, isHeading, isReferenceCache, offsetToLoc, replaceSubstringByPos } from 'utils';
+import { BetterNoteComposerComponent, contains, getDisplayText, getHeadingLevel, isEmbed, isFrontmatterLinkCache, isHeading, isReferenceCache, offsetToLoc, replaceSubstringByPos } from 'utils';
+import { get } from 'http';
 
 
 export interface InFileRange {
@@ -56,6 +57,58 @@ export class Extractor extends BetterNoteComposerComponent {
                 nextHeadingLine = line;
                 break;
             }
+        }
+
+        const numLines = cm.state.doc.lines;
+        const srcRange = {
+            file: srcFile,
+            start: currentHeadingLine
+                ? offsetToLoc(editor, currentHeadingLine.from)
+                : { line: 0, col: 0, offset: 0 },
+            end: nextHeadingLine
+                ? offsetToLoc(editor, nextHeadingLine.from - 1)
+                : { line: numLines - 1, col: cm.state.doc.line(numLines).length, offset: cm.state.doc.length }
+        };
+
+        return this.extract(srcRange, dstFile, cm, paneType);
+    }
+
+    // Extract heading and all its subheadings
+    async extractHeadingRecursive(srcFile: TFile, editor: Editor, dstFile: TFile, paneType: PaneType | boolean): Promise<void> {
+        // @ts-ignore
+        const cm: EditorView = editor.cm;
+        const currentLine = cm.state.doc.lineAt(cm.state.selection.main.anchor);
+        
+        let currentHeadingLine: Line | null = null;
+        let currentHeaderLevel: number | null = null;
+
+        currentHeadingLine = cm.state.doc.line(currentLine.number);
+        currentHeaderLevel = getHeadingLevel(currentHeadingLine.text);
+
+        if (!currentHeaderLevel) {
+            throw Error(`${this.plugin.manifest.name}: Cannot extract non-heading line recursively`);
+        }
+
+        let nextHeadingLine: Line | null = null;
+        let inCodeBlock = false;
+        for (let i = currentLine.number + 1; i <= cm.state.doc.lines; i++) {
+            const line = cm.state.doc.line(i);
+            // Avoid matching with comments in a code block
+            if (line.text.startsWith('```')) {
+                inCodeBlock = !inCodeBlock;
+            }
+            
+            if (inCodeBlock) continue;
+            if (!isHeading(line.text)) continue;
+
+            if (getHeadingLevel(line.text) <= currentHeaderLevel) {
+                nextHeadingLine = line;
+                break;
+            }
+        }
+
+        if (inCodeBlock) {
+            throw Error(`${this.plugin.manifest.name}: Cannot extract heading recursively inside a code block`);
         }
 
         const numLines = cm.state.doc.lines;

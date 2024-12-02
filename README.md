@@ -5,7 +5,7 @@ This [Obsidian.md](https://obsidian.md) plugin fixes some problems of the core [
 - [Heading/block links are not updated properly](https://forum.obsidian.md/t/note-composer-links-to-blocks-and-headers-should-be-updated-when-extracting/37534)
 - Cannot undo extraction in the destination file
 
-Currently, it only supports extraction of the current selection or heading.
+Currently, it only supports extraction of the current selection or heading (with and without extracting sub-headings).
 Use the core plugin for merging notes.
 
 ## Installation

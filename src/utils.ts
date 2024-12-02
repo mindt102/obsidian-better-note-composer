@@ -54,6 +54,10 @@ export function isHeading(line: string) {
     return /^#{1,6} /.test(line);
 }
 
+export function getHeadingLevel(line: string) {
+    return line.match(/^(#{1,6}) /)?.[1].length ?? 0;
+}
+
 export function offsetToLoc(editor: Editor, offset: number): Loc {
     const pos = editor.offsetToPos(offset);
     return { line: pos.line, col: pos.ch, offset };
