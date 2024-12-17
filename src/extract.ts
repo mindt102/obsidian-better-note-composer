@@ -373,5 +373,6 @@ export class ExtractionTask extends BetterNoteComposerComponent {
                 return data;
             });
         }
+        await leaf.openFile(this.extraction.srcRange.file);
     }
 }
