@@ -100,4 +100,12 @@ export default class BetterNoteComposerPlugin extends Plugin {
 	getStayOnSourceFile(): boolean {
 		return this.settings.stayOnSourceFile;
 	}
+
+	getKeepHeading(): boolean {
+		return this.settings.keepHeading;
+	}
+
+	getLinkToDestHeading(): boolean {
+		return this.settings.linkToDestHeading;
+	}
 }

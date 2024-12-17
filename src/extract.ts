@@ -230,10 +230,24 @@ export class ExtractionTask extends BetterNoteComposerComponent {
         };
 
         let replacement = '';
+        const heading = cache.headings?.find((heading) => contains(this.extraction.srcRange, heading.position));
+        
         const option = this.plugin.getReplacementText();
         if (option !== 'none') {
-            const linkToExtraction = this.app.fileManager.generateMarkdownLink(this.extraction.dstFile, sourcePath);
+            let subpath = '';
+            if (heading && this.plugin.getLinkToDestHeading()) {
+                subpath = '#' + heading.heading;
+            }
+            const linkToExtraction = this.app.fileManager.generateMarkdownLink(this.extraction.dstFile, sourcePath, subpath);
             replacement = option === 'link' ? linkToExtraction : '!' + linkToExtraction;
+        }
+
+        const keepHeading = this.plugin.getKeepHeading();
+        if (keepHeading) {
+            if (heading) {
+                const headingText = "#".repeat(heading.level) + ' ' + heading.heading;
+                replacement = headingText + '\n\n' + replacement;
+            }
         }
 
         const replaceSrcRangeTransactionSpec: TransactionSpec = {
