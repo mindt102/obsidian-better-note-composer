@@ -11,10 +11,12 @@ const REPLACEMENT_TEXT = {
 
 export interface BetterNoteComposerSettings {
 	replacementText: keyof typeof REPLACEMENT_TEXT;
+	stayOnSourceFile: boolean;
 }
 
 export const DEFAULT_SETTINGS: BetterNoteComposerSettings = {
 	replacementText: 'same',
+	stayOnSourceFile: true,
 };
 
 export class BetterNoteComposerSettingTab extends PluginSettingTab {
@@ -33,6 +35,17 @@ export class BetterNoteComposerSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.replacementText)
 					.onChange(async (value: keyof typeof REPLACEMENT_TEXT) => {
 						this.plugin.settings.replacementText = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(this.containerEl)
+			.setName('Stay on source file')
+			.setDesc('Stay on the source file after extraction.')
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.stayOnSourceFile)
+					.onChange(async (value) => {
+						this.plugin.settings.stayOnSourceFile = value;
 						await this.plugin.saveSettings();
 					});
 			});

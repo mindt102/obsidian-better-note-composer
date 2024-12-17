@@ -373,6 +373,9 @@ export class ExtractionTask extends BetterNoteComposerComponent {
                 return data;
             });
         }
-        await leaf.openFile(this.extraction.srcRange.file);
+
+        if (this.plugin.getStayOnSourceFile()) {
+            await leaf.openFile(this.extraction.srcRange.file);
+        }
     }
 }

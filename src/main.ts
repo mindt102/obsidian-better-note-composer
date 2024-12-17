@@ -96,4 +96,8 @@ export default class BetterNoteComposerPlugin extends Plugin {
 			? (this.app.internalPlugins.plugins['note-composer'].instance.options.replacementText ?? 'link')
 			: this.settings.replacementText;
 	}
+
+	getStayOnSourceFile(): boolean {
+		return this.settings.stayOnSourceFile;
+	}
 }
