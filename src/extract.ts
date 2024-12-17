@@ -1,4 +1,4 @@
-import { BlockSubpathResult, CachedMetadata, Editor, FrontmatterLinkCache, HeadingSubpathResult, LinkCache, Loc, MarkdownView, PaneType, Reference, ReferenceCache, TFile, getLinkpath, parseLinktext, resolveSubpath } from 'obsidian';
+import { BlockSubpathResult, CachedMetadata, Editor, FrontmatterLinkCache, HeadingSubpathResult, LinkCache, Loc, MarkdownView, Notice, PaneType, Reference, ReferenceCache, TFile, getLinkpath, parseLinktext, resolveSubpath } from 'obsidian';
 import { TransactionSpec, Line } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
@@ -86,6 +86,7 @@ export class Extractor extends BetterNoteComposerComponent {
         currentHeaderLevel = getHeadingLevel(currentHeadingLine.text);
 
         if (!currentHeaderLevel) {
+            new Notice(`${this.plugin.manifest.name}: Cannot extract non-heading line recursively`);
             throw Error(`${this.plugin.manifest.name}: Cannot extract non-heading line recursively`);
         }
 
@@ -108,6 +109,7 @@ export class Extractor extends BetterNoteComposerComponent {
         }
 
         if (inCodeBlock) {
+            new Notice(`${this.plugin.manifest.name}: Cannot extract heading recursively inside a code block`);
             throw Error(`${this.plugin.manifest.name}: Cannot extract heading recursively inside a code block`);
         }
 
@@ -235,15 +237,22 @@ export class ExtractionTask extends BetterNoteComposerComponent {
         const option = this.plugin.getReplacementText();
         if (option !== 'none') {
             let subpath = '';
-            if (heading && this.plugin.getLinkToDestHeading()) {
-                subpath = '#' + heading.heading;
+            let alias = '';
+            if (heading) {
+                if (this.plugin.getLinkToDestHeading()) {
+                    subpath = '#' + heading.heading;
+                }
+
+                if (this.plugin.getUseHeadingAsAlias()) {
+                    alias = heading.heading;
+                }
             }
-            const linkToExtraction = this.app.fileManager.generateMarkdownLink(this.extraction.dstFile, sourcePath, subpath);
+
+            const linkToExtraction = this.app.fileManager.generateMarkdownLink(this.extraction.dstFile, sourcePath, subpath, alias);
             replacement = option === 'link' ? linkToExtraction : '!' + linkToExtraction;
         }
 
-        const keepHeading = this.plugin.getKeepHeading();
-        if (keepHeading) {
+        if (this.plugin.getKeepHeading()) {
             if (heading) {
                 const headingText = "#".repeat(heading.level) + ' ' + heading.heading;
                 replacement = headingText + '\n\n' + replacement;
@@ -390,6 +399,19 @@ export class ExtractionTask extends BetterNoteComposerComponent {
 
         if (this.plugin.getStayOnSourceFile()) {
             await leaf.openFile(this.extraction.srcRange.file);
+            // Set cursor and scroll to the extracted position
+            // @ts-ignore
+            if (leaf.view instanceof MarkdownView) {
+                // @ts-ignore
+                const editor = leaf.view.editor;
+                const extractedLine = this.extraction.srcRange.start.line;
+                console.log(this.extraction)
+                console.log(extractedLine)
+                editor.setCursor({ line: extractedLine, ch: 0 });
+                editor.scrollIntoView( {
+                    from: { line: extractedLine, ch: 0 }, to: { line: extractedLine, ch: 0 }
+                }, true);
+            }
         }
     }
 }

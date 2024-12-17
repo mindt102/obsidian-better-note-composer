@@ -108,4 +108,8 @@ export default class BetterNoteComposerPlugin extends Plugin {
 	getLinkToDestHeading(): boolean {
 		return this.settings.linkToDestHeading;
 	}
+
+	getUseHeadingAsAlias(): boolean {
+		return this.settings.useHeadingAsAlias;
+	}
 }

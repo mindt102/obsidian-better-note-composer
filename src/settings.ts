@@ -14,6 +14,7 @@ export interface BetterNoteComposerSettings {
 	stayOnSourceFile: boolean;
 	keepHeading: boolean;
 	linkToDestHeading: boolean;
+	useHeadingAsAlias: boolean;
 }
 
 export const DEFAULT_SETTINGS: BetterNoteComposerSettings = {
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: BetterNoteComposerSettings = {
 	stayOnSourceFile: true,
 	keepHeading: true,
 	linkToDestHeading: true,
+	useHeadingAsAlias: true,
 };
 
 export class BetterNoteComposerSettingTab extends PluginSettingTab {
@@ -72,6 +74,17 @@ export class BetterNoteComposerSettingTab extends PluginSettingTab {
 				toggle.setValue(this.plugin.settings.linkToDestHeading)
 					.onChange(async (value) => {
 						this.plugin.settings.linkToDestHeading = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(this.containerEl)
+			.setName('Use heading as alias')
+			.setDesc('Use the heading as the alias if using the "Link" option.')
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.useHeadingAsAlias)
+					.onChange(async (value) => {
+						this.plugin.settings.useHeadingAsAlias = value;
 						await this.plugin.saveSettings();
 					});
 			});
